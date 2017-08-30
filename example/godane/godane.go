@@ -44,9 +44,10 @@ func main() {
 		fmt.Printf("Domain:    %s\nPort:      %d\nTransport: %s\nTLSA:   %s\n", domain, port, transport, tlsa)
 	}
 
-	hints, _ := godane.ReadHints("./hints")
+	hints, _ := godane.DefaultHints()
 	chain, _ := godane.GetChain(tlsa, hints)
-	valid := godane.ValidateChain(chain, godane.GetTrustAnchors("./trustanchor"))
+	anchors, _ := godane.DefaultTrustAnchors()
+	valid := godane.ValidateChain(chain, anchors)
 	if valid {
 		fmt.Println("Chain is valid")
 	} else {
