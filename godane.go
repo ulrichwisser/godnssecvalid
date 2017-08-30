@@ -1,131 +1,82 @@
-package main
+package godane
 
 import (
-	"flag"
+	"errors"
 	"fmt"
-	"os"
 
 	"github.com/miekg/dns"
-	"github.com/ulrichwisser/godane/rrcache"
 )
 
-var verbose bool = false
+var Verbose bool = false
 
-func main() {
-
-	// define and parse command line arguments
-	flag.BoolVar(&verbose, "verbose", false, "print more information while running")
-	flag.BoolVar(&verbose, "v", false, "print more information while running")
-	flag.Parse()
-
-	if flag.NArg() != 1 {
-		fmt.Printf("Usage: %s [-v] <filename>\n", os.Args[0])
-		os.Exit(1)
-	}
-
-	var domain = flag.Arg(0)
-	tlsa, _ := dns.TLSAName(dns.Fqdn(domain), "443", "tcp")
-
-	if verbose {
-		fmt.Printf("Domain: %s\nTLSA:   %s\n", domain, tlsa)
+func GetChain(tlsa string, hints []dns.RR) ([]dns.RR, error) {
+	if Verbose {
+		fmt.Printf("GODANE: GetChain(\"%s\", [%d]dns.RR)\n", tlsa, len(hints))
 	}
 
 	zone := "."
-	chain := rrcache.NewRRcache()
-	cache := rrcache.NewRRcache()
-	cache.ReadCachefile("./hints")
+	chain := make([]dns.RR, 0)
+	cache := hints
 
 	run := 0
 	for {
 		run = run + 1
 
 		// compute zone
-		if len(chain.Cache) > 0 {
-			zone = chain.Cache[len(chain.Cache)-1].Header().Name
+		if len(chain) > 0 {
+			zone = chain[len(chain)-1].Header().Name
 		} else {
 			zone = `.`
 		}
 
-		if verbose {
+		if Verbose {
 			fmt.Printf("\n\n\n========================================================================\nRun %d\n", run)
 			fmt.Printf("Zone: %s\n", zone)
 			fmt.Printf("Chain:\n")
-			for _, rr := range chain.Cache {
+			for _, rr := range chain {
 				fmt.Println(rr)
 			}
 		}
 
 		// get keys for zone
 		keymsg := resolv(cache, zone, zone, dns.TypeDNSKEY)
-		if verbose {
+		if Verbose {
 			fmt.Printf("DNSKEY\n%s\n", keymsg.String())
 		}
-		ParseAnswer(keymsg.Answer, chain)
+		chain = parseAnswer(keymsg.Answer, chain)
 
 		// get TLSA RR or we do get a referral
 		tlsamsg := resolv(cache, zone, tlsa, dns.TypeTLSA)
-		if verbose {
+		if Verbose {
 			fmt.Printf("TLSA\n%s\n", tlsamsg.String())
 		}
-		ParseAnswer(tlsamsg.Answer, chain)
-		ParseAnswer(tlsamsg.Ns, chain)
-		ParseAdditional(tlsamsg.Ns, cache)
-		ParseAdditional(tlsamsg.Extra, cache)
+		if tlsamsg == nil {
+			return nil, errors.New("Resolving error")
+		}
+		chain = parseAnswer(tlsamsg.Answer, chain)
+		chain = parseAnswer(tlsamsg.Ns, chain)
+		cache = parseAdditional(tlsamsg.Ns, cache)
+		cache = parseAdditional(tlsamsg.Extra, cache)
 
 		// check if we are done
-		if len(chain.FindRR(tlsa, dns.TypeTLSA)) > 0 {
+		if len(findRR(chain, tlsa, dns.TypeTLSA)) > 0 {
 			break
 		}
 
 		// Endless loop?
 		if run >= 20 {
-			panic("Seems we are in an endless loop.")
+			return nil, errors.New("Seems we are in an endless loop.")
 		}
 	}
 
-	if verbose {
+	if Verbose {
 		fmt.Printf("Zone: %s\n", zone)
 		fmt.Printf("Chain:\n")
-		for _, rr := range chain.Cache {
+		for _, rr := range chain {
 			fmt.Println(rr)
 		}
 	}
 
-	valid := ValidateChain(chain, GetTrustAnchors("./trustanchor"))
-	if valid {
-		fmt.Println("Chain is valid")
-	} else {
-		fmt.Println("Chain is not valid")
-	}
-}
-
-func ParseAnswer(rrlist []dns.RR, cache *rrcache.RRcache) {
-	QTYPES := [3]uint16{dns.TypeTLSA, dns.TypeDS, dns.TypeDNSKEY}
-	for _, rr := range rrlist {
-		if verbose {
-			fmt.Printf("RR: %s\n", rr.String())
-		}
-		for _, qtype := range QTYPES {
-			if rr.Header().Rrtype == qtype {
-				cache.AddToCache(rr)
-			}
-			if rr.Header().Rrtype == dns.TypeRRSIG && rr.(*dns.RRSIG).TypeCovered == qtype {
-				cache.AddToCache(rr)
-			}
-		}
-	}
-}
-
-func ParseAdditional(rrlist []dns.RR, cache *rrcache.RRcache) {
-	QTYPES := [3]uint16{dns.TypeA, dns.TypeAAAA, dns.TypeNS}
-	for _, rr := range rrlist {
-		if verbose {
-			fmt.Printf("RR: %s\n", rr.String())
-		}
-		for _, qtype := range QTYPES {
-			if rr.Header().Rrtype == qtype {
-				cache.AddToCache(rr)
-			}
-		}
-	}
+	// done
+	return chain, nil
 }
