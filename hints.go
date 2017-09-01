@@ -7,6 +7,7 @@ import (
 	"github.com/miekg/dns"
 )
 
+// ReadHints reads in DNS resource records from a file
 func ReadHints(f io.Reader) ([]dns.RR, error) {
 	//
 	hints := make([]dns.RR, 0)
@@ -19,11 +20,12 @@ func ReadHints(f io.Reader) ([]dns.RR, error) {
 	return hints, nil
 }
 
+// DefaultHints returns a list of DNS resource records with the root hints.
 func DefaultHints() ([]dns.RR, error) {
-	return ReadHints(strings.NewReader(root_hints))
+	return ReadHints(strings.NewReader(rootHints))
 }
 
-const root_hints string = `
+const rootHints string = `
 ; <<>> DiG 9.8.3-P1 <<>> @199.7.91.13 +dnssec . ns
 ; (1 server found)
 ;; global options: +cmd

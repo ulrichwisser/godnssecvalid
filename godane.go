@@ -7,8 +7,11 @@ import (
 	"github.com/miekg/dns"
 )
 
-var Verbose bool = false
+// Verbose set to true will generate debug output on stdout
+var Verbose = false
 
+// GetChain builds a chain of DNSKEY, DS, RRSIG and other records down
+// from the root servers to the requested RR.
 func GetChain(tlsa string, hints []dns.RR) ([]dns.RR, error) {
 	if Verbose {
 		fmt.Printf("GODANE: GetChain(\"%s\", [%d]dns.RR)\n", tlsa, len(hints))
@@ -65,7 +68,7 @@ func GetChain(tlsa string, hints []dns.RR) ([]dns.RR, error) {
 
 		// Endless loop?
 		if run >= 20 {
-			return nil, errors.New("Seems we are in an endless loop.")
+			return nil, errors.New("Seems we are in an endless loop")
 		}
 	}
 

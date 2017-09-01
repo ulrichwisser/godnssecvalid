@@ -76,16 +76,17 @@ func checkRRSIG(keys []dns.RR, rrset []dns.RR, rrsigs []dns.RR) bool {
 					fmt.Println("  Valid signature")
 				}
 				return true
-			} else {
-				if Verbose {
-					fmt.Println("  No valid signature")
-				}
+			}
+			if Verbose {
+				fmt.Println("  No valid signature")
 			}
 		}
 	}
 	return false
 }
 
+// ValidateChain takes a chain of DNS resource records and validates
+// all signatures beginning with the trustanchors
 func ValidateChain(chain []dns.RR, trustanchor []dns.RR) bool {
 
 	// process chain into RR sets

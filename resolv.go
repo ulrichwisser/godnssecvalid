@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	TIMEOUT   time.Duration = 5 * time.Second
-	EDNS0SIZE               = 4096
+	resolvtimeout time.Duration = 5 * time.Second
+	edns0size     uint16        = 4096
 )
 
 // ask all servers and return first result
@@ -38,14 +38,14 @@ func resolving(ip *net.IP, qname string, qtype uint16) *dns.Msg {
 	// Setting up query
 	query := new(dns.Msg)
 	query.SetQuestion(qname, qtype)
-	query.SetEdns0(EDNS0SIZE, false)
+	query.SetEdns0(edns0size, false)
 	query.IsEdns0().SetDo()
 	query.RecursionDesired = false
 	query.AuthenticatedData = true
 
 	// Setting up resolver
 	client := new(dns.Client)
-	client.ReadTimeout = TIMEOUT
+	client.ReadTimeout = resolvtimeout
 
 	// make the query and wait for answer
 	server := ip2Resolver(ip)
