@@ -89,5 +89,8 @@ func isIPv4(ip *net.IP) bool {
 }
 
 func isIPv6(ip *net.IP) bool {
-	return ip.To4() == nil
+	if ip.To4() != nil {
+		return false
+	}
+	return ip.To16() != nil
 }
