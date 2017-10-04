@@ -32,7 +32,7 @@ func TestIsIPv6(t *testing.T) {
 
 func TestIp2Resolver(t *testing.T) {
   str1 := ip2Resolver(&ip1)
-  if str1 != "NOT AN IP" { t.Error("Expected \"NOT AN IP\" got ", str1)}
+  if str1 != "<nil>:53" { t.Error("Expected <nil>:53 got ", str1)}
   str2 := ip2Resolver(&ip2)
   if str2 != "1.2.3.4:53" { t.Error("Expected 1.2.3.4:53 got ",str2)}
 }

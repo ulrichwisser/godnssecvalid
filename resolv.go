@@ -14,33 +14,40 @@ const (
 )
 
 // ask all servers and return first result
-func resolv(hints []dns.RR, zone string, qname string, qtype uint16) *dns.Msg {
-	iplist := make([]*net.IP, 0)
-	for _, ns := range getNS(hints, zone) {
-		for _, ip := range getIP(hints, ns) {
-			iplist = append(iplist, ip)
+func resolv(servers []string, qname string, qtype uint16) *dns.Msg {
+	if len(servers) == 0 {
+		if Verbose {
+			fmt.Printf("resolv: no resolvers found.\n")
 		}
+		return nil
 	}
-	for _, ip := range iplist {
-		msg := resolving(ip, qname, qtype)
+
+	for _, server := range servers {
+		msg, err := resolving(server, qname, qtype)
+		if Verbose && err != nil {
+			fmt.Printf("resolv: error resolving. %s\n", err)
+		}
 		if msg != nil {
 			return msg
 		}
+	}
+	if Verbose {
+		fmt.Printf("resolv: no answers from resolvers(%d)", len(servers))
 	}
 	return nil
 }
 
 // resolv will send a query and return the result
-func resolving(ip *net.IP, qname string, qtype uint16) *dns.Msg {
+func resolving(server string, qname string, qtype uint16) (*dns.Msg, error) {
 	if Verbose {
-		fmt.Printf("resolving(%s, %s, %d)\n", ip.String(), qname, qtype)
+		fmt.Printf("resolving(%s, %s, %d<%s>)\n", server, qname, qtype, dns.TypeToString[qtype])
 	}
 	// Setting up query
 	query := new(dns.Msg)
 	query.SetQuestion(qname, qtype)
 	query.SetEdns0(edns0size, false)
 	query.IsEdns0().SetDo()
-	query.RecursionDesired = false
+	query.RecursionDesired = true
 	query.AuthenticatedData = true
 
 	// Setting up resolver
@@ -48,40 +55,24 @@ func resolving(ip *net.IP, qname string, qtype uint16) *dns.Msg {
 	client.ReadTimeout = resolvtimeout
 
 	// make the query and wait for answer
-	server := ip2Resolver(ip)
 	r, _, err := client.Exchange(query, server)
 
 	// check for errors
 	if err != nil {
-		if Verbose {
-			fmt.Printf("%-30s: Error resolving %s (server %s)\n", qname, err, server)
-		}
-		return nil
+		return nil, fmt.Errorf("resolving: error resolving %s (server %s), %s", qname, server, err)
 	}
 	if r == nil {
-		if Verbose {
-			fmt.Printf("%-30s: No answer (Server %s)\n", qname, server)
-		}
-		return nil
+		return nil, fmt.Errorf("resolving: no answer resolving %s (server %s)", qname, server)
 	}
 	if r.Rcode != dns.RcodeSuccess {
-		if Verbose {
-			fmt.Printf("%-30s: %s (Rcode %d, Server %s)\n", qname, dns.RcodeToString[r.Rcode], r.Rcode, server)
-		}
-		return nil
+		return nil, fmt.Errorf("resolving: could not resolve %s rcode %s  (server %s)", qname, dns.RcodeToString[r.Rcode], server)
 	}
 
-	return r
+	return r, nil
 }
 
 func ip2Resolver(ip *net.IP) string {
-	if isIPv4(ip) {
-		return ip.String() + ":53"
-	}
-	if isIPv6(ip) {
-		return "[" + ip.String() + "]:53"
-	}
-	return "NOT AN IP"
+	return net.JoinHostPort(ip.String(), "53")
 }
 
 func isIPv4(ip *net.IP) bool {
@@ -93,4 +84,21 @@ func isIPv6(ip *net.IP) bool {
 		return false
 	}
 	return ip.To16() != nil
+}
+
+// getResolvers will read the list of resolvers from /etc/resolv.conf
+func GetDefaultResolvers() ([]string, error) {
+	resolvers := make([]string, 0)
+
+	conf, err := dns.ClientConfigFromFile("/etc/resolv.conf")
+	if conf == nil {
+		return nil, fmt.Errorf("Cannot initialize local resolver: %s", err)
+	}
+	for _, server := range conf.Servers {
+		resolvers = append(resolvers, net.JoinHostPort(server, "53"))
+	}
+	if len(resolvers) == 0 {
+		return nil, fmt.Errorf("No resolvers found")
+	}
+	return resolvers, nil
 }

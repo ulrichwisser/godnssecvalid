@@ -10,7 +10,7 @@ Godane is a [Go](http://golang.org/) implementation to verify an arbitrary DNSSE
 * [Example](https://github.com/ulrichwisser/godane/example/godane)
 
 ### Status
-Thia is a first working version.
+This is a first working version.
 
 - TODO: currently CNAME indirection is not supported
 - TODO: currently zones without glue are not supported
