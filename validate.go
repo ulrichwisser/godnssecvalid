@@ -1,4 +1,4 @@
-package godane
+package godnssecvalid
 
 import (
 	"fmt"

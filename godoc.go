@@ -29,4 +29,4 @@
 //
 // Of course, you should do proper error checking!
 //
-package godane
+package godnssecvalid

@@ -1,4 +1,4 @@
-package godane
+package godnssecvalid
 
 import (
 	"fmt"
@@ -32,7 +32,7 @@ func GetChain(servers []string, fqdn string, qtype uint16) ([]dns.RR, error) {
 
 	// run through all labels
 	for _, label := range labels {
-    // compute zone
+		// compute zone
 		if zone == "." {
 			zone = label + zone
 		} else {
@@ -47,44 +47,44 @@ func GetChain(servers []string, fqdn string, qtype uint16) ([]dns.RR, error) {
 			}
 		}
 
-    // get DS records for zone
+		// get DS records for zone
 		dsmsg := resolv(servers, zone, dns.TypeDS)
-    // ignore if no DS records were found
-    if dsmsg != nil {
-      if Verbose {
+		// ignore if no DS records were found
+		if dsmsg != nil {
+			if Verbose {
 				fmt.Printf("DS\n%s\n", dsmsg.String())
 			}
-      // save DS records in chain
-      chain = append(chain, getRRset(dsmsg.Answer, dns.TypeDS)...)
-      chain = append(chain, getRRset(dsmsg.Ns, dns.TypeDS)...)
+			// save DS records in chain
+			chain = append(chain, getRRset(dsmsg.Answer, dns.TypeDS)...)
+			chain = append(chain, getRRset(dsmsg.Ns, dns.TypeDS)...)
 		}
 
 		// get DNSKEY records for zone
 		keymsg := resolv(servers, zone, dns.TypeDNSKEY)
-    // ignore if no DNSKEY records were found
+		// ignore if no DNSKEY records were found
 		if keymsg != nil {
 			if Verbose {
 				fmt.Printf("DNSKEY\n%s\n", keymsg.String())
 			}
-      // save DNSKEY records in chain
-      chain = append(chain, getRRset(keymsg.Answer, dns.TypeDNSKEY)...)
-      chain = append(chain, getRRset(keymsg.Ns, dns.TypeDNSKEY)...)
+			// save DNSKEY records in chain
+			chain = append(chain, getRRset(keymsg.Answer, dns.TypeDNSKEY)...)
+			chain = append(chain, getRRset(keymsg.Ns, dns.TypeDNSKEY)...)
 		}
 
 	}
 
-  // last step
-  // Add desired RR with RRSIG
-  qmsg := resolv(servers, fqdn, qtype)
-  if qmsg == nil {
-      return chain, fmt.Errorf("Could not get %s IN %s.", fqdn, dns.TypeToString[qtype])
-  }
+	// last step
+	// Add desired RR with RRSIG
+	qmsg := resolv(servers, fqdn, qtype)
+	if qmsg == nil {
+		return chain, fmt.Errorf("Could not get %s IN %s.", fqdn, dns.TypeToString[qtype])
+	}
 
-    if Verbose {
-      fmt.Printf("%s\n%s\n", dns.TypeToString[qtype], qmsg.String())
-    }
-    chain = append(chain, getRRset(qmsg.Answer, qtype)...)
-    chain = append(chain, getRRset(qmsg.Ns, qtype)...)
+	if Verbose {
+		fmt.Printf("%s\n%s\n", dns.TypeToString[qtype], qmsg.String())
+	}
+	chain = append(chain, getRRset(qmsg.Answer, qtype)...)
+	chain = append(chain, getRRset(qmsg.Ns, qtype)...)
 
 	if Verbose {
 		fmt.Printf("FQDN: %s\n", fqdn)

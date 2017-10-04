@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"github.com/miekg/dns"
-	"github.com/ulrichwisser/godane"
+	"github.com/ulrichwisser/godnssecvalid"
 )
 
 type Strings []string
@@ -43,7 +43,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	godane.Verbose = verbose
+	godnssecvalid.Verbose = verbose
 	var transport = "tcp"
 	if udp {
 		transport = "udp"
@@ -57,16 +57,16 @@ func main() {
 	// check/get resolver list
 	if len(resolvers) == 0 {
 		var err error
-		resolvers, err = godane.GetDefaultResolvers()
+		resolvers, err = godnssecvalid.GetDefaultResolvers()
 		if err != nil {
 			fmt.Printf("resolv: error finding resolvers. %s\n", err)
 			os.Exit(5)
 		}
 	}
 
-	chain, _ := godane.GetChain(resolvers, tlsa, dns.TypeTLSA)
-	anchors, _ := godane.GetDefaultTrustAnchors()
-	valid := godane.ValidateChain(chain, anchors)
+	chain, _ := godnssecvalid.GetChain(resolvers, tlsa, dns.TypeTLSA)
+	anchors, _ := godnssecvalid.GetDefaultTrustAnchors()
+	valid := godnssecvalid.ValidateChain(chain, anchors)
 
 	// print result
 	if valid {
