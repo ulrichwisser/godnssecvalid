@@ -2,7 +2,7 @@
 // Source code is licensed under GPL-3.0
 // (which should come together with the source code)
 
-// Package godane implements collection and verification of a DNSSEC chain
+// Package godnssecvalid implements collection and verification of a DNSSEC chain
 //
 // Overview
 //
@@ -22,10 +22,9 @@
 //  port := 443 // 443 = https, 25 = smtp
 //  transport := "tcp" // or "udp"
 //  tlsa, _:= dns.TLSAName(dns.Fqdn(domain), strconv.FormatUint(port, 10), transport)
-//  hints, _ := godane.DefaultHints()
-//  chain, _ := godane.GetChain(tlsa, hints)
-//  anchors, _ := godane.DefaultTrustAnchors()
-//  valid := godane.ValidateChain(chain, anchors)
+//  chain, _ := godnssecvalid.GetChain(godnssecvalid.GetDefaultResolvers(), tlsa, dns.TypeTLSA)
+//  anchors, _ := godnssecvalid.GetDefaultTrustAnchors()
+//  valid := godnssecvalid.ValidateChain(chain, anchors)
 //
 // Of course, you should do proper error checking!
 //
