@@ -14,8 +14,6 @@ godane [-v] [-udp] [-p <port>] [-r <resolver ip>|...] <domain>
 >
 > -r <ip>   resolver - specify which resolver(s) to use (default: resolver list from /etc/resolv.conf)
 >
->                      can be given multiple times
->
 > <domain>  domain   - full qualified domain name, used to compute TLSA label
 
 ### TLSA label
