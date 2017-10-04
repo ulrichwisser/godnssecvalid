@@ -23,7 +23,7 @@ func resolv(servers []string, qname string, qtype uint16) *dns.Msg {
 	}
 
 	for _, server := range servers {
-		msg, err := resolving(server, qname, qtype)
+		msg, err := resolving(server, true, qname, qtype)
 		if Verbose && err != nil {
 			fmt.Printf("resolv: error resolving. %s\n", err)
 		}
@@ -38,7 +38,7 @@ func resolv(servers []string, qname string, qtype uint16) *dns.Msg {
 }
 
 // resolv will send a query and return the result
-func resolving(server string, qname string, qtype uint16) (*dns.Msg, error) {
+func resolving(server string, udp bool, qname string, qtype uint16) (*dns.Msg, error) {
 	if Verbose {
 		fmt.Printf("resolving(%s, %s, %d<%s>)\n", server, qname, qtype, dns.TypeToString[qtype])
 	}
@@ -53,12 +53,18 @@ func resolving(server string, qname string, qtype uint16) (*dns.Msg, error) {
 	// Setting up resolver
 	client := new(dns.Client)
 	client.ReadTimeout = resolvtimeout
+	if !udp {
+		client.Net = "tcp"
+	}
 
 	// make the query and wait for answer
 	r, _, err := client.Exchange(query, server)
 
 	// check for errors
 	if err != nil {
+		if err == dns.ErrTruncated {
+			return resolving(server, false, qname, qtype)
+		}
 		return nil, fmt.Errorf("resolving: error resolving %s (server %s), %s", qname, server, err)
 	}
 	if r == nil {
@@ -86,7 +92,7 @@ func isIPv6(ip *net.IP) bool {
 	return ip.To16() != nil
 }
 
-// getResolvers will read the list of resolvers from /etc/resolv.conf
+// GetDefaultResolvers will read the list of resolvers from /etc/resolv.conf
 func GetDefaultResolvers() ([]string, error) {
 	resolvers := make([]string, 0)
 
