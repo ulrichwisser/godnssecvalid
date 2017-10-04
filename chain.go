@@ -87,7 +87,7 @@ func GetChain(servers []string, fqdn string, qtype uint16) ([]dns.RR, error) {
 	// Add desired RR with RRSIG
 	qmsg := resolv(servers, fqdn, qtype)
 	if qmsg == nil {
-		return chain, fmt.Errorf("Could not get %s IN %s.", fqdn, dns.TypeToString[qtype])
+		return chain, fmt.Errorf("Could not get %s IN %s", fqdn, dns.TypeToString[qtype])
 	}
 
 	if Verbose {
