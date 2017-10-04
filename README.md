@@ -7,7 +7,7 @@ Godnssecvalid is a [Go](http://golang.org/) implementation to verify an arbitrar
 ### Documentation
 
 * [API Reference](http://godoc.org/github.com/ulrichwisser/godnssecvalid)
-* [Example](https://github.com/ulrichwisser/godane/example/godane)
+* [Example](https://github.com/ulrichwisser/godnssecvalid/example/godane)
 
 ### Status
 This is a first working version.
