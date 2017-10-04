@@ -8,8 +8,8 @@ import (
 	"github.com/miekg/dns"
 )
 
-// GetTrustAnchors reads a list of trust anchors and returns a list of DS records
-// All DS records in the file will be returned as well ass all DNSKEY records
+// GetTrustAnchors reads a list of trust anchors and returns a list of DS records.
+// All DS records in the file will be returned as well as all DNSKEY records
 // converted to DS records. Any other records will be ignored.
 func GetTrustAnchors(f io.Reader) ([]dns.RR, error) {
 	anchors := make([]dns.RR, 0)

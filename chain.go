@@ -7,6 +7,16 @@ import (
 	"github.com/miekg/dns"
 )
 
+// GetChain uses the specified resolvers and builds a list of DNSKEY, DS and RRSIG
+// records leading to the requested record. The fqdn is seperated in labels and
+// for each label DNSKEY and RRSIG and DS and RRSIG records are requested from
+// one of the resolvers. Any failure is silently ignored. For the last labels
+// qtype records and RRSIG are requested. Any failure to do so is reported back.
+// We can not know where a zone cut is. Therefor we try all labels, but fail
+// silently if no records can be found.
+// servers - a list of resolvers to uses
+// fqdn - full qualified domain name
+// qtype - type of DNS record to retrieve
 func GetChain(servers []string, fqdn string, qtype uint16) ([]dns.RR, error) {
 	if Verbose {
 		fmt.Printf("GODANE: GetChain(\"%s\", %d<%s>)\n", fqdn, qtype, dns.TypeToString[qtype])
