@@ -18,10 +18,7 @@
 //
 // In short, do something like this
 //
-//  domain := "example.com"
-//  port := 443 // 443 = https, 25 = smtp
-//  transport := "tcp" // or "udp"
-//  tlsa, _:= dns.TLSAName(dns.Fqdn(domain), strconv.FormatUint(port, 10), transport)
+//  tlsa, _:= dns.TLSAName(dns.Fqdn("example.com"), "443", "tcp")
 //  chain, _ := godnssecvalid.GetChain(godnssecvalid.GetDefaultResolvers(), tlsa, dns.TypeTLSA)
 //  anchors, _ := godnssecvalid.GetDefaultTrustAnchors()
 //  valid := godnssecvalid.ValidateChain(chain, anchors)
