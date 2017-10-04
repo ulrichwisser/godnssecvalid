@@ -32,7 +32,7 @@ func GetTrustAnchors(f io.Reader) ([]dns.RR, error) {
 	return anchors, nil
 }
 
-// DefaultTrustAnchors returns a list of the trust anchors for the root zone.
+// GetDefaultTrustAnchors returns a list of the trust anchors for the root zone.
 func GetDefaultTrustAnchors() ([]dns.RR, error) {
 	return GetTrustAnchors(strings.NewReader(rootTrustAnchors))
 }
