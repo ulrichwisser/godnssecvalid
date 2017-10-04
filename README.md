@@ -12,8 +12,6 @@ Godnssecvalid is a [Go](http://golang.org/) implementation to verify an arbitrar
 ### Status
 This is a first working version.
 
-- TODO: currently CNAME indirection is not supported
-
 ### Installation
 
     go get github.com/ulrichwisser/godane
